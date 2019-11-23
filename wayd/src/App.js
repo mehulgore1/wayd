@@ -135,7 +135,7 @@ class App extends Component {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ to: '+16202680564', body: textBody })
+      body: JSON.stringify({ to: '+12144992345', body: textBody })
     })
   }
 
