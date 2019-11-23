@@ -225,13 +225,19 @@ class App extends Component {
                     / {this.state.events[key]['capacity']} people &nbsp;&nbsp;&nbsp;${this.state.events[key]['price']} </p>
 
 
-                  {this.state.membership[key] ? (<button class="btn btn-secondary" onClick={this.handleLeaveEvent.bind(this, key)}> Leave Group </button>) :
+                  {this.state.membership[key] ? 
+                  
+                  
+                  (<button class="btn btn-secondary" onClick={this.handleLeaveEvent.bind(this, key)}> Leave Group </button>) :
 
-                    (<button class="btn btn-success" onClick={this.handleJoinEvent.bind(this, key)} >I'm down</button>)}
+                    (
+                    <div> 
+                    <button class="btn btn-success" onClick={this.handleJoinEvent.bind(this, key)} >I'm down</button>
                       &nbsp;
                   <button class="btn btn-warning" onClick={this.handleNotNow.bind(this, key)} >Not now</button>
                   &nbsp;
                   <button class="btn btn-danger" onClick={this.handleNotEver.bind(this, key)} >Not ever</button>
+                  </div>)}
 
                 </div>
               </div>
