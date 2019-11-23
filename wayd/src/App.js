@@ -13,8 +13,8 @@ class App extends Component {
       capacity: '',
       time: '',
       location: '',
-      price: '', 
-      events: {}, 
+      price: '',
+      events: {},
       membership: {}
     }
 
@@ -28,14 +28,16 @@ class App extends Component {
     this.handlePrice = this.handlePrice.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
     this.listenToEventChanges = this.listenToEventChanges.bind(this)
+    this.handleNotNow = this.handleNotNow.bind(this)
+    this.handleNotEver = this.handleNotEver.bind(this)
   }
 
-  componentDidMount() { 
-  
+  componentDidMount() {
+
   }
 
   componentDidUpdate() {
-    
+
   }
 
   handleActivity(event) {
@@ -67,7 +69,7 @@ class App extends Component {
     })
 
     firebase.database().ref('events').child(key).child('people')
-    .child(this.state.user.uid).set({random: 0})
+      .child(this.state.user.uid).set({ random: 0 })
 
     this.state.membership[key] = true
   }
@@ -80,14 +82,38 @@ class App extends Component {
     })
 
     firebase.database().ref('events').child(key).child('people').child(this.state.user.uid)
-    .remove() 
+      .remove()
 
     this.state.membership[key] = false
   }
 
+  handleNotNow(key) {
+    let thisState = this
+    firebase.database().ref('all_users').child(this.state.user.uid).child('not_now').child(key).set({
+      description: thisState.state.events[key]['activity']
+    })
+    var copy = this.state.events
+    delete copy[key]
+    this.setState({
+      events: copy
+    })
+  }
+
+  handleNotEver(key) {
+    let thisState = this
+    firebase.database().ref('all_users').child(this.state.user.uid).child('not_ever').child(key).set({
+      description: thisState.state.events[key]['activity']
+    })
+    var copy = this.state.events
+    delete copy[key]
+    this.setState({
+      events: copy
+    })
+  }
+
   listenToEventChanges() {
     let thisState = this
-    firebase.database().ref('events').on('child_changed', function(snapshot) {
+    firebase.database().ref('events').on('child_changed', function (snapshot) {
       thisState.renderEvents()
     })
   }
@@ -99,30 +125,30 @@ class App extends Component {
       capacity: '',
       time: '',
       location: '',
-      price: '', 
+      price: '',
     })
-    this.createEvent(this.state.activity, this.state.capacity, this.state.time, this.state.location, 
+    this.createEvent(this.state.activity, this.state.capacity, this.state.time, this.state.location,
       this.state.price)
-      var textBody = 'Your friend, Mehul Gore just started ' + this.state.activity + '. Go to tinyurl.com/waydyc to check it out!'
-      fetch('/api/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({to: '+16202680564', body: textBody})
-      })
+    var textBody = 'Your friend, Mehul Gore just started ' + this.state.activity + '. Go to tinyurl.com/waydyc to check it out!'
+    fetch('/api/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ to: '+16202680564', body: textBody })
+    })
   }
 
   createEvent(activity, capacity, time, location, price) {
     var ref = firebase.database().ref('events').push({
-      activity: activity, 
+      activity: activity,
       capacity: capacity,
       time: time,
       location: location,
-      price: price, 
+      price: price,
     })
     firebase.database().ref('events').child(ref.getKey()).child('people')
-    .child(this.state.user.uid).set({random: 0}).then(this.renderEvents)
+      .child(this.state.user.uid).set({ random: 0 }).then(this.renderEvents)
   }
 
   renderEvents() {
@@ -132,13 +158,15 @@ class App extends Component {
         const events = {}
         const membership = {}
         snapshot.forEach(snap => {
-          events[snap.key] = {activity: snap.val().activity, capacity: snap.val().capacity, time: snap.val().time, 
-            location: snap.val().location, price: snap.val().price, people: snap.val().people}
-            membership[snap.key] = events[snap.key]['people'] !== undefined && events[snap.key]['people']
+          events[snap.key] = {
+            activity: snap.val().activity, capacity: snap.val().capacity, time: snap.val().time,
+            location: snap.val().location, price: snap.val().price, people: snap.val().people
+          }
+          membership[snap.key] = events[snap.key]['people'] !== undefined && events[snap.key]['people']
             .hasOwnProperty(thisState.state.user.uid)
         })
         thisState.setState({
-          events: events, 
+          events: events,
           membership: membership
         })
       })
@@ -155,10 +183,13 @@ class App extends Component {
         signedIn: true,
         user: user,
       })
+      firebase.database().ref('all_users').child(user.uid).child('displayName').set({
+        value: user.displayName
+      })
       return user
     }).catch(function (error) {
       console.log(error)
-    }).then(function(user) {
+    }).then(function (user) {
       thisState.renderEvents()
       thisState.listenToEventChanges()
     })
@@ -168,11 +199,11 @@ class App extends Component {
     return (<div align="center">
       {!this.state.signedIn ?
         (
-          <div> 
+          <div>
             <h1> Welcome to Wayd </h1>
             <h4> The On-Demand Platform for Social Activities </h4>
-          <button class="btn btn-primary" onClick={this.signInWithFacebook}> Facebook Login </button>
-          </div> 
+            <button class="btn btn-primary" onClick={this.signInWithFacebook}> Facebook Login </button>
+          </div>
         )
         :
         (<div align='center'>
@@ -180,55 +211,59 @@ class App extends Component {
           <h2> Things happening around you: </h2>
 
           {Object.keys(this.state.events).map((key, i) => (
-            <div> 
-          <div class="card w-75 p-3">
-            <div class="card-header w-auto p-3"> 
-            <strong> {this.state.events[key]['activity']} @ {this.state.events[key]['time']} </strong>
-            </div> 
-            <div class="card-body w-auto p-3">
-              <p class="card-text">{this.state.events[key]['location']} </p>
-              <p class="card-text"> </p>
-              <p class="card-text">
-              {
-                this.state.events[key]['people'] !== undefined ? Object.keys(this.state.events[key]['people']).length : 0}
-               / {this.state.events[key]['capacity']} people &nbsp;&nbsp;&nbsp;${this.state.events[key]['price']} </p> 
+            <div>
+              <div class="card w-75 p-3">
+                <div class="card-header w-auto p-3">
+                  <strong> {this.state.events[key]['activity']} @ {this.state.events[key]['time']} </strong>
+                </div>
+                <div class="card-body w-auto p-3">
+                  <p class="card-text">{this.state.events[key]['location']} </p>
+                  <p class="card-text"> </p>
+                  <p class="card-text">
+                    {
+                      this.state.events[key]['people'] !== undefined ? Object.keys(this.state.events[key]['people']).length : 0}
+                    / {this.state.events[key]['capacity']} people &nbsp;&nbsp;&nbsp;${this.state.events[key]['price']} </p>
 
 
-               {this.state.membership[key] ? (<button class="btn btn-danger" onClick={this.handleLeaveEvent.bind(this, key)}> Leave Group </button>) : 
-               
-               (<button class="btn btn-primary" onClick={this.handleJoinEvent.bind(this, key)} >I'm down</button>)}
-              
+                  {this.state.membership[key] ? (<button class="btn btn-secondary" onClick={this.handleLeaveEvent.bind(this, key)}> Leave Group </button>) :
+
+                    (<button class="btn btn-success" onClick={this.handleJoinEvent.bind(this, key)} >I'm down</button>)}
+                      &nbsp;
+                  <button class="btn btn-warning" onClick={this.handleNotNow.bind(this, key)} >Not now</button>
+                  &nbsp;
+                  <button class="btn btn-danger" onClick={this.handleNotEver.bind(this, key)} >Not ever</button>
+
+                </div>
+              </div>
+              <br />
             </div>
-          </div>
-          <br/> 
-          </div> 
-          
+
           ))}
 
           <h2> Don't see something you like? Create your own! </h2>
           <form onSubmit={this.handleSubmit}>
             <label>
-              What's the activity? <br/> <input type="text" name="activity" value={this.state.activity}
-                onChange={this.handleActivity} required/>
+              What's the activity? <br /> <input type="text" name="activity" value={this.state.activity}
+                onChange={this.handleActivity} required />
             </label> <br />
             <label>
-              How many people: <br/><input type="number" name="capacity" value={this.state.capacity}
-                onChange={this.handleCapacity} required/>
+              How many people: <br /><input type="number" name="capacity" value={this.state.capacity}
+                onChange={this.handleCapacity} required />
             </label> <br />
             <label>
-              When <br/><input type="text" name="time" value={this.state.time}
-                onChange={this.handleTime} required/>
-            </label>             
+              When <br /><input type="text" name="time" value={this.state.time}
+                onChange={this.handleTime} required />
+            </label>
             <br />
             <label>
-              Where <br/><input type="text" name="location" value={this.state.location}
-                onChange={this.handleLocation} required/>
+              Where <br /><input type="text" name="location" value={this.state.location}
+                onChange={this.handleLocation} required />
             </label> <br />
             <label>
-              How much does it cost? <br/><input type="text" name="price" value={this.state.price}
+              How much does it cost? <br /><input type="text" name="price" value={this.state.price}
                 onChange={this.handlePrice} required />
             </label> <br />
-            <input class="btn btn-primary" type="submit" value="Let's Go!"required />
+            <input class="btn btn-primary" type="submit" value="Let's Go!" required />
           </form>
 
         </div>
