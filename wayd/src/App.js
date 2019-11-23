@@ -14,7 +14,8 @@ class App extends Component {
       time: '',
       location: '',
       price: '', 
-      events: {}
+      events: {}, 
+      membership: {}
     }
 
     this.renderEvents = this.renderEvents.bind(this)
@@ -30,7 +31,11 @@ class App extends Component {
   }
 
   componentDidMount() { 
-    this.listenToEventChanges()
+  
+  }
+
+  componentDidUpdate() {
+    
   }
 
   handleActivity(event) {
@@ -60,8 +65,24 @@ class App extends Component {
     this.setState({
       events: copy
     })
+
     firebase.database().ref('events').child(key).child('people')
     .child(this.state.user.uid).set({random: 0})
+
+    this.state.membership[key] = true
+  }
+
+  handleLeaveEvent(key) {
+    var copy = this.state.events
+    delete copy[key]['people'][this.state.user.uid]
+    this.setState({
+      events: copy
+    })
+
+    firebase.database().ref('events').child(key).child('people').child(this.state.user.uid)
+    .remove() 
+
+    this.state.membership[key] = false
   }
 
   listenToEventChanges() {
@@ -108,13 +129,17 @@ class App extends Component {
     let thisState = this
     firebase.database().ref('events')
       .once('value').then(function (snapshot) {
-        const temp = {}
+        const events = {}
+        const membership = {}
         snapshot.forEach(snap => {
-          temp[snap.key] = {activity: snap.val().activity, capacity: snap.val().capacity, time: snap.val().time, 
+          events[snap.key] = {activity: snap.val().activity, capacity: snap.val().capacity, time: snap.val().time, 
             location: snap.val().location, price: snap.val().price, people: snap.val().people}
+            membership[snap.key] = events[snap.key]['people'] !== undefined && events[snap.key]['people']
+            .hasOwnProperty(thisState.state.user.uid)
         })
         thisState.setState({
-          events: temp
+          events: events, 
+          membership: membership
         })
       })
   }
@@ -130,9 +155,13 @@ class App extends Component {
         signedIn: true,
         user: user,
       })
+      return user
     }).catch(function (error) {
       console.log(error)
-    }).then(this.renderEvents());
+    }).then(function(user) {
+      thisState.renderEvents()
+      thisState.listenToEventChanges()
+    })
   }
 
   render() {
@@ -161,9 +190,14 @@ class App extends Component {
               <p class="card-text"> </p>
               <p class="card-text">
               {
-                this.state.events[key]['people'] != undefined ? Object.keys(this.state.events[key]['people']).length : 0}
+                this.state.events[key]['people'] !== undefined ? Object.keys(this.state.events[key]['people']).length : 0}
                / {this.state.events[key]['capacity']} people &nbsp;&nbsp;&nbsp;${this.state.events[key]['price']} </p> 
-              <button class="btn btn-primary" onClick={this.handleJoinEvent.bind(this, key)} >I'm down</button>
+
+
+               {this.state.membership[key] ? (<button class="btn btn-danger" onClick={this.handleLeaveEvent.bind(this, key)}> Leave Group </button>) : 
+               
+               (<button class="btn btn-primary" onClick={this.handleJoinEvent.bind(this, key)} >I'm down</button>)}
+              
             </div>
           </div>
           <br/> 
