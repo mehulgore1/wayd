@@ -82,6 +82,14 @@ class App extends Component {
     })
     this.createEvent(this.state.activity, this.state.capacity, this.state.time, this.state.location, 
       this.state.price)
+      var textBody = 'Your friend, Mehul Gore just started  ' + this.state.activity + '. Go to tinyurl.com/waydyc to check it out!'
+      fetch('/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({to: '+12144992345', body: textBody})
+      })
   }
 
   createEvent(activity, capacity, time, location, price) {
@@ -97,7 +105,6 @@ class App extends Component {
   }
 
   renderEvents() {
-    console.log("RENDER EVENTS")
     let thisState = this
     firebase.database().ref('events')
       .once('value').then(function (snapshot) {
